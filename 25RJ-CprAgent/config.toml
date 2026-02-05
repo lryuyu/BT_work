@@ -1,0 +1,17 @@
+[room]
+server_addr = ""
+
+[location]
+min_center = 300
+tolerance_horizontal = 50
+tolerance_vertical = 50
+
+[airflow]
+max_flow = 150.0
+threshold_flow = 3.0
+
+[pressure]
+min_pre = 300
+
+[distance]
+min_dis = 450
