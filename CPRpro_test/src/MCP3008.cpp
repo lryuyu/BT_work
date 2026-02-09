@@ -4,22 +4,21 @@
 #include "config.h"
 
 void MCP3008_init() {
-    // 配置SPI硬件引脚
-    pinMode(SPI_SCLK,OUTPUT);  // SPI时钟引脚
-    pinMode(SPI_MOSI,OUTPUT);  // SPI主机输出/从机输入
-    pinMode(SPI_MISO,INPUT);   // SPI主机输入/从机输出
+    // 初始SPI
+    pinMode(SPI_SCLK,OUTPUT);  // SPI???????
+    pinMode(SPI_MOSI,OUTPUT);  // SPI???????/???????
+    pinMode(SPI_MISO,INPUT);   // SPI????????/??????
 
-    // 配置MCP3008片选引脚
-    pinMode(MCP3008_CS0,OUTPUT); // ADC_1片选
-    pinMode(MCP3008_CS1,OUTPUT); // ADC_2片选
+    // 初始片选MCP3008
+    pinMode(MCP3008_CS0,OUTPUT); // ADC_1??
+    pinMode(MCP3008_CS1,OUTPUT); // ADC_2??
 
-    // 片选引脚默认高电平（不选中芯片）
     digitalWrite(MCP3008_CS0,HIGH);
     digitalWrite(MCP3008_CS1,HIGH);
 
-    // 初始化SPI总线
+    // 启动SPI
     SPI.begin();
-    // 设置SPI时钟分频（系统时钟/16，保证通信稳定性）
+    //降低时钟
     SPI.setClockDivider(SPI_CLOCK_DIV16);
 }
 
@@ -29,16 +28,16 @@ uint16_t MCP3008_read(const adc_id_t adc_id,uint8_t channel) {
     const uint8_t cs_pin = (adc_id == ADC_1) ? MCP3008_CS0 : MCP3008_CS1;
 
     digitalWrite(cs_pin, LOW);
-
+    //发送读取命令
     uint8_t cmd = 0x01;
     cmd |= (0x80 | channel )<< 4;
 
     SPI.transfer(cmd);
-
+    //读取10位数据
     uint16_t val = SPI.transfer(0x00) << 2;
 
     val |= SPI.transfer(0x00) >> 6;
-
+    //取消选中
     digitalWrite(cs_pin, HIGH);
 
     return val;

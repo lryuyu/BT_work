@@ -3,33 +3,69 @@
 
 #include <Arduino.h>
 #include <BLEServer.h>
-#include <BLEDevice.h>
-#include <BLECharacteristic.h>
-#include "SensorFilter.h"
 
-// BLE配置结构体：存储WiFi/服务器配置信息
 struct BLEConfig {
-    String ssid;          // WiFi名称
-    String password;      // WiFi密码
-    String ip;            // 服务器IP
-    uint16_t port = 0;    // 服务器端口
-    bool isConfigReceived = false; // 是否收到新配置
+    String ssid;
+    String password;
+    String ip;
+    uint16_t port;
+    bool isConfigReceived = false;
 };
 
 class BluetoothManager {
 public:
     BluetoothManager();
     void begin();
-    void sendData(const sensor_data_t *data) const;
-    bool isDeviceConnected() const;
+    BLEConfig getConfig();
+    bool hasNewConfig() const;
+    void clearNewConfigFlag();
 
 private:
     BLEServer* pServer = nullptr;
-    BLECharacteristic* pChar = nullptr;
-    bool deviceConnected = false;
-
+    BLECharacteristic* pCharacteristic = nullptr;
+    BLEConfig config;
     void setupBLE();
+    class ConfigCharacteristicCallbacks;
     class ConnectionServerCallbacks;
 };
 
 #endif
+
+
+// #ifndef BLUETOOTH_MANAGER_H
+// #define BLUETOOTH_MANAGER_H
+//
+// #include <Arduino.h>
+// #include <BLEServer.h>
+// #include <BLEDevice.h>
+// #include <BLECharacteristic.h>
+// #include "SensorFilter.h"
+//
+//
+// struct BLEConfig {
+//     String ssid;
+//     String password;
+//     String ip;
+//     uint16_t port = 0;
+//     bool isConfigReceived = false;
+// };
+//
+// class BluetoothManager {
+// public:
+//     BluetoothManager();
+//     void begin();
+//     void sendData(const sensor_data_t *data) const;
+//     bool isDeviceConnected() const;
+//    // bool parseConfig(const String& configStr, BLEConfig& config);
+//
+//
+// private:
+//     BLEServer* pServer = nullptr;
+//     BLECharacteristic* pChar = nullptr;
+//     bool deviceConnected = false;
+//
+//     void setupBLE();
+//     class ConnectionServerCallbacks;
+// };
+//
+// #endif

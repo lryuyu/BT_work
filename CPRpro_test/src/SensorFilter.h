@@ -29,15 +29,15 @@ typedef struct {
 
 }sensor_data_t;
 
-// 增量滤波状态结构体（替代原全局数组，每个通道独立）
+//滤波状态
 struct SimpleFilter {
-    uint16_t buffer[(int)FILTER_MAX] = {0}; // 滤波窗口缓存
-    uint8_t index = 0;                      // 当前缓存索引
-    uint32_t sum = 0;                       // 缓存值累加和（增量更新）
-    uint8_t filled = 0;                     // 已填充的缓存数量
+    uint16_t buffer[(int)FILTER_MAX] = {0};
+    uint8_t index = 0;
+    uint32_t sum = 0;
+    uint8_t filled = 0;
 };
 
-// 全局声明：滤波后数据的互斥锁（保护多任务访问）
+
 extern SemaphoreHandle_t sensorDataMutex;
 
 

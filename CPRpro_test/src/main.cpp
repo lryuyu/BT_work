@@ -5,53 +5,51 @@
 #include "WiFiManager.h"
 #include "config.h"
 
-
+BLEConfig bleConfig;
 WiFiManager wifiManager;
 SocketClient socketClient;
+BluetoothManager bleManager;
 sensor_data_t sensorData;
 
-
 bool hasBLEConfig = false;
-BLEConfig bleConfig;
-
 
 unsigned long lastSendTime = 0;
 
 void setup() {
 
   Serial.begin(115200);
-  PN532_init();
   delay(100);
+  Serial.println("程序开始运行！");
 
-  sensor_init();
+  // sensor_init();
+  //
+  // PN532_init();
+
+  bleManager.begin();
   Serial.println("Sensor init OK");
-
-
 }
-
-
 
 void loop() {
 
-  if (hasBLEConfig) {
-
+  if (bleConfig.isConfigReceived) {
+    hasBLEConfig = true;
     wifiManager.begin(bleConfig.ssid, bleConfig.password);
 
     socketClient.reset();
 
-    hasBLEConfig = false;
+    socketClient.reset();
+    bleConfig.isConfigReceived = false;
     Serial.println("[System] BLE config applied");
   }
 
 
   wifiManager.maintainConnection();
 
-
   if (WiFiManager::isConnected() && bleConfig.port != 0 && !socketClient.isConnected()) {
+    const BLEConfig cfg = bleManager.getConfig();
     socketClient.connectToServer(bleConfig.ip, bleConfig.port);
   }
 
-  socketClient.maintainConnection();
 
   const unsigned long now = millis();
 
@@ -60,7 +58,6 @@ void loop() {
     lastSendTime = now;
 
     sensor_read_all_filtered(&sensorData);
-
 
     String jsonData;
     // jsonData += "{\"timestamp\":" + String(now) + ",";
@@ -100,7 +97,7 @@ void loop() {
   // if (now - lastDebugTime > 5000) {
   //   lastDebugTime = now;
   //   sensor_read_all_filtered(&sensorData);
-  //   Serial.println("测试:");
+  //   Serial.println("????:");
   //   Serial.printf("lp_1=%d , lp_2=%d , lp_3=%d , lp_4=%d , lp_5=%d, AED_1=%d , AED_2=%d",
   //     sensorData.lp_1 , sensorData.lp_2 , sensorData.lp_3, sensorData.lp_4, sensorData.lp_5 , sensorData.AED_0 , sensorData.AED_1);
   // }

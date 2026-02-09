@@ -2,6 +2,7 @@
 #define WIFI_MANAGER_H
 #include <Arduino.h>
 #include <WiFi.h>
+#include "config.h"
 
 class WiFiManager {
 public:
@@ -15,7 +16,7 @@ private:
     String currentSSID = "";
     String currentPass = "";
     unsigned long lastReconnectAttempt = 0;
-    const unsigned long reconnectInterval = 5000;
+    const unsigned long reconnectInterval = WIFI_RECONNECT_INTERVAL;
 };
 
 #endif
