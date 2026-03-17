@@ -18,6 +18,7 @@ private:
     String currentPass = "";
     unsigned long lastReconnectAttempt = 0;
     const unsigned long reconnectInterval = WIFI_RECONNECT_INTERVAL;
+    unsigned long _connectStartTime = 0;
 };
 
 #endif

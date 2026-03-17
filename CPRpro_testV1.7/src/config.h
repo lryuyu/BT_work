@@ -5,18 +5,18 @@
 
 #include <Arduino.h>
 
-// //SPI????
-// #define SPI_SCLK 48
-// #define SPI_MOSI 38
-// #define SPI_MISO 47
+//SPI????
+#define SPI_SCLK 13
+#define SPI_MOSI 11
+#define SPI_MISO 12
 
 //MCP3008
 #define MCP3008_CS0 6
 #define MCP3008_CS1 5
 
 //I2C
-#define I2C_SDA A4 //11
-#define I2C_SCL A5 //12
+#define I2C_SDA 9
+#define I2C_SCL 10
 #define TCA9548_ADDR 0x70
 
 

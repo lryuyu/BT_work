@@ -20,21 +20,21 @@ void WiFiManager::maintainConnection() {
     }
 
     if (_connecting) {
-        unsigned long _connectStartTime = 0;
+        // 用成员变量，而非局部变量
         if (millis() - _connectStartTime > 2000) {
             Serial.println("WiFi connection timeout, retry later");
             _connecting = false;
         }
+        return;  // 避免重复进入重连逻辑
     }
 
     const unsigned long now = millis();
     if (now - lastReconnectAttempt >= reconnectInterval) {
-        unsigned long _connectStartTime = 0;
         Serial.println("WiFi disconnected, reconnecting...");
         WiFi.disconnect();
         WiFi.begin(currentSSID.c_str(), currentPass.c_str());
         _connecting = true;
-        _connectStartTime = 0;
+        _connectStartTime = millis();  // 初始化连接开始时间
         lastReconnectAttempt = now;
     }
 }

@@ -8,8 +8,6 @@
 #define PN532_RESET 17
 
 Adafruit_PN532 PN532(PN532_IRQ, PN532_RESET);
-const uint8_t TARGET_UID_0[TARGET_UID_LEN] = {0x12, 0x34, 0x56, 0x78};
-const uint8_t TARGET_UID_1[TARGET_UID_LEN] = {0xAB, 0xCD, 0xEF, 0x01};
 
 static sensor_data_t s_filteredData = {0};
 
@@ -46,15 +44,7 @@ static uint16_t simpleFilter(const uint16_t newVal, SimpleFilter& state) {
         rawData.lp_3 = simpleFilter(rawData.lp_3 , s_filterStates[2]);
         rawData.lp_4 = simpleFilter(rawData.lp_4 , s_filterStates[3]);
         rawData.lp_5 = simpleFilter(rawData.lp_5 , s_filterStates[4]);
-        // rawData.lp_6 = simpleFilter(rawData.lp_6 , s_filterStates[5]);
-        // rawData.lp_7 = simpleFilter(rawData.lp_7 , s_filterStates[6]);
-        // rawData.lp_8 = simpleFilter(rawData.lp_8 , s_filterStates[7]);
         rawData.pp_L = simpleFilter(rawData.pp_L , s_filterStates[5]);
-        rawData.pp_R = simpleFilter(rawData.pp_R , s_filterStates[6]);
-        rawData.head_0 = simpleFilter(rawData.head_0 , s_filterStates[7]);
-        rawData.nose_L = simpleFilter(rawData.nose_L, s_filterStates[8]);
-        rawData.nose_R = simpleFilter(rawData.nose_R, s_filterStates[9]);
-        rawData.chin_0 = simpleFilter(rawData.chin_0, s_filterStates[10]);
 
 
         if (xSemaphoreTake(sensorDataMutex, (TickType_t)10) == pdTRUE) {
@@ -139,20 +129,15 @@ void PN532_init() {
 
 // 第一个PN532读取并对比UID
 uint32_t PN532_1_read_uid() {
-    TCA9548_select_channel(0);
+    TCA9548_select_channel(0);//切换到通道0
     uint8_t uid[7];
     uint8_t uidLength;
 
-    //超时时间50ms
+    //超时时间100ms
     if (PN532.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength,100)) {
-
-        if (uidLength != TARGET_UID_LEN) return 0;
-        for (uint8_t i = 0; i < TARGET_UID_LEN; i++) {
-            if (uid[i] != TARGET_UID_0[i]) return 0;
-        }
-        return 1;
+        return 1;//检测到NFC贴对位置返回1
     }
-    return 2;
+    return 0;//读取失败返回0
 }
 
 // 第二个PN532读取并对比UID
@@ -162,13 +147,9 @@ uint32_t PN532_2_read_uid() {
     uint8_t uidLength;
 
     if (PN532.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength,100)) {
-        if (uidLength != TARGET_UID_LEN) return 0; // 长度不匹配，返回0
-        for (uint8_t i = 0; i < TARGET_UID_LEN; i++) {
-            if (uid[i] != TARGET_UID_1[i]) return 0; // 任意字节不匹配，返回0
-        }
-        return 1; // 所有字节都匹配，返回1
+        return 2; // 第二个NFC检测到数据，返回2
     }
-    return 2; // 读取失败，返回2
+    return 0; // 读取失败，返回0
 }
 
 
@@ -186,13 +167,15 @@ void sensor_read_all_raw(sensor_data_t *data) {
     // data->lp_8 = sensor_read_raw(A_SENS_LP_8_PIN);
     // data->lp_9 = sensor_read_raw(A_SENS_LP_9_PIN);
     data->pp_L   = MCP3008_read(A_SENS_PP_0_PIN.adc,   A_SENS_PP_0_PIN.ch);
-    data->pp_R   = MCP3008_read(A_SENS_PP_1_PIN.adc,   A_SENS_PP_1_PIN.ch);
-    data->head_0 = MCP3008_read(A_SENS_HEAD_0_PIN.adc, A_SENS_HEAD_0_PIN.ch);
-    data->nose_L = MCP3008_read(A_SENS_NOSE_0_PIN.adc, A_SENS_NOSE_0_PIN.ch);
-    data->nose_R = MCP3008_read(A_SENS_NOSE_1_PIN.adc, A_SENS_NOSE_1_PIN.ch);
-    data->chin_0 = MCP3008_read(A_SENS_CHIN_0_PIN.adc, A_SENS_CHIN_0_PIN.ch);
+    //data->pp_R   = MCP3008_read(A_SENS_PP_1_PIN.adc,   A_SENS_PP_1_PIN.ch);
+    //data->head_0 = MCP3008_read(A_SENS_HEAD_0_PIN.adc, A_SENS_HEAD_0_PIN.ch);
+    //data->nose_L = MCP3008_read(A_SENS_NOSE_0_PIN.adc, A_SENS_NOSE_0_PIN.ch);
+    //data->nose_R = MCP3008_read(A_SENS_NOSE_1_PIN.adc, A_SENS_NOSE_1_PIN.ch);
+    //data->chin_0 = MCP3008_read(A_SENS_CHIN_0_PIN.adc, A_SENS_CHIN_0_PIN.ch);
     data->DIS    = sensor_read_DIS();
     data->AF     = sensor_read_AF();
+    data->AED_L = 0;
+    data->AED_R = 0;
 }
 
 //

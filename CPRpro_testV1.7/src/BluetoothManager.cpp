@@ -67,34 +67,64 @@ public:
 };
 
 void BluetoothManager::setupBLE() {
+  Serial.println("[BLE] Starting BLE initialization...");
+  // 初始化BLE设备
   BLEDevice::init(BLE_CONFIG_NAME);
-  pServer = BLEDevice::createServer();
-
-  if (pServer == nullptr) {
-    Serial.println("[BLE] Failed to create BLE server");
+  if (!BLEDevice::getInitialized()) {
+    Serial.println("[BLE] BLEDevice init failed!");
     return;
   }
+  Serial.println("[BLE] BLEDevice init success");
 
+  // 创建BLE Server
+  pServer = BLEDevice::createServer();
+  if (!pServer) {
+    Serial.println("[BLE] Server create failed");
+    return;
+  }
   pServer->setCallbacks(new ConnectionServerCallbacks(this));
+  Serial.println("[BLE] BLE Server created");
 
+  // 创建BLE Service
   BLEService *pService = pServer->createService(BLE_SERVICE_UUID);
+  if (!pService) {
+    Serial.println("[BLE] Service create failed");
+    return;
+  }
+  Serial.println("[BLE] BLE Service created");
+
+  // 创建Characteristic（增加NOTIFY属性，兼容手机监听）
   pCharacteristic = pService->createCharacteristic(
-                      BLE_CHARACTERISTIC_UUID,
-                      BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ
-                    );
+      BLE_CHARACTERISTIC_UUID,
+      BLECharacteristic::PROPERTY_WRITE |
+      BLECharacteristic::PROPERTY_READ |
+      BLECharacteristic::PROPERTY_NOTIFY  // 新增：通知属性
+  );
+  if (!pCharacteristic) {
+    Serial.println("[BLE] Characteristic create failed");
+    return;
+  }
   pCharacteristic->setCallbacks(new ConfigCharacteristicCallbacks(this));
-  pCharacteristic->setValue("Ready");
+  pCharacteristic->setValue("Ready");  // 设置初始值
+  Serial.println("[BLE] BLE Characteristic created");
+
+  // 启动Service
   pService->start();
-  BLEAdvertising *pAdvertising = pServer->getAdvertising();
+  Serial.println("[BLE] BLE Service started");
 
-  BLEAdvertisementData advData;
-  advData.setName(BLE_CONFIG_NAME);
-  advData.setAppearance(BLE_ADV_APPEARANCE);
-
-
-  pAdvertising->setAdvertisementData(advData);
-  pAdvertising->start();
-  Serial.println("BLE Advertising started");
+  // 配置并启动广播（关键修复）
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  if (!pAdvertising) {
+    Serial.println("[BLE] Get Advertising failed");
+    return;
+  }
+  pAdvertising->addServiceUUID(BLE_SERVICE_UUID);  // 广播包含服务UUID
+  pAdvertising->setScanResponse(true);             // 启用扫描响应
+  pAdvertising->setMinPreferred(0x06);             // 最小连接间隔
+  pAdvertising->setMaxPreferred(0x12);             // 最大连接间隔
+  pAdvertising->setAppearance(0x0080);             // 设置设备外观
+  BLEDevice::startAdvertising();                   // 启动广播
+  Serial.println("[BLE] BLE Advertising started successfully");
 }
 
 void BluetoothManager::begin() {
